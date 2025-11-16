@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dramaflix — Demo Lengkap</title>
+  <meta name="description" content="Dramaflix — demo streaming UI (HTML/CSS/JS single file) dengan fitur Akun dan Admin." />
+  <style>
+    :root{
+      --bg:#071021; --card:#0f1724; --muted:#9aa6b2; --accent:#ff3b6b; --glass: rgba(255,255,255,0.04);
+      --radius:12px; --glass-2: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,var(--bg) 0%, #031025 100%); color:#e6eef6;-webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;}
+    .app{max-width:1200px;margin:28px auto;padding:18px}
+
+    header{display:flex;align-items:center;gap:14px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#ff7a95,#af5bff);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+    h1{font-size:18px;margin:0}
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer; transition:all 0.2s ease;}
+    .btn:hover{background:var(--glass-2);}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#ff7a95);color:white;border:none}
+
+    .hero{margin-top:18px;border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 340px;gap:18px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 6px 24px rgba(1,8,20,0.6)}
+    .hero-left{display:flex;flex-direction:column;justify-content:center}
+    .hero h2{font-size:28px;margin:0 0 6px}
+    .hero p{margin:0;color:var(--muted)}
+    .hero-actions{margin-top:16px;display:flex;gap:10px}
+
+    /* slider */
+    .slider{position:relative;overflow:hidden;border-radius:12px}
+    .slides{display:flex;transition:transform 500ms ease}
+    .slide{min-width:100%;padding:18px;display:flex;gap:18px;align-items:center}
+    .poster{width:220px;height:130px;border-radius:10px;background-size:cover;background-position:center;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+    .meta{color:var(--muted)}
+
+    main{margin-top:20px}
+    .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .search{flex:1;min-width:220px;display:flex;align-items:center;background:var(--glass);padding:8px;border-radius:10px}
+    .search input{background:transparent;border:0;outline:none;color:inherit;width:100%;font-size:14px}
+    .filters{display:flex;gap:8px;align-items:center}
+    .chip{padding:8px 10px;border-radius:999px;background:var(--glass);font-size:13px;color:var(--muted);cursor:pointer; transition:all 0.2s ease}
+    .chip:hover{background:var(--glass-2); color:white;}
+    .chip.active{background:var(--accent); color:white;}
+
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+    .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.01));border-radius:12px;overflow:hidden;position:relative;cursor:pointer;transition:transform 220ms ease, box-shadow 220ms ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(1,8,20,0.6)}
+    .card .art{height:180px;background-size:cover;background-position:center}
+    .card .info{padding:10px}
+    .title{font-weight:600}
+    .sub{font-size:13px;color:var(--muted);margin-top:6px}
+    .fav{position:absolute;top:10px;right:10px;background:linear-gradient(90deg,#ff6b88,#ff3b6b);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;border:none;opacity:0.85; transition:opacity 0.2s ease}
+    .fav:hover{opacity:1; transform:scale(1.1);}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(2,6,12,0.6), rgba(2,6,12,0.8));z-index:50}
+    .modal.open{display:flex}
+    .modal-card{width:min(980px,95%);background:#071428;border-radius:14px;padding:14px;box-shadow:0 12px 40px rgba(0,0,0,0.8)}
+    .modal-grid{display:grid;grid-template-columns:420px 1fr;gap:12px}
+    .player{background:black;border-radius:8px;padding:8px}
+
+    .row{display:flex;gap:8px;align-items:center}
+    .tag{padding:6px 8px;border-radius:8px;background:var(--glass-2);font-size:13px;color:var(--muted)}
+
+    footer{margin-top:20px;text-align:center;color:var(--muted)}
+
+    @media (max-width:1000px){
+      .grid{grid-template-columns:repeat(3,1fr)}
+      .hero{grid-template-columns:1fr}
+      .hero .poster{width:140px;height:96px}
+      .modal-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:640px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+      header{flex-direction:column;align-items:flex-start}
+      .controls{width:100%;justify-content:space-between}
+    }
+
+    /* Custom Styles for new features */
+    .file-input-wrap{ position: relative; overflow: hidden; display: inline-block; }
+    .file-input-wrap input[type=file]{ position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">DF</div>
+        <div>
+          <h1>Dramaflix</h1>
+          </div>
+      </div>
+      <div class="controls">
+        <button id="adminToggle" class="btn" title="Open Admin Panel">Admin</button>
+        <div id="continueBadge" class="btn" style="display:none">Continue Watching</div>
+        <button id="themeToggle" class="btn" title="Toggle theme">Toggle Theme</button>
+        <button id="openFav" class="btn">Favorites <span id="favCount" style="margin-left:8px;color:var(--accent)">0</span></button>
+        <button id="authBtn" class="btn primary">Login</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-left">
+        <div class="slider" id="heroSlider">
+          <div class="slides" id="slides"></div>
+        </div>
+        <div class="hero-actions">
+          <button id="playHero" class="btn primary">Play Trailer</button>
+          <button id="addHeroFav" class="btn">Add to Favorites</button>
+        </div>
+      </div>
+      <aside>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="padding:12px;border-radius:12px;background:var(--glass)">
+            <div style="font-weight:600">Trending</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:8px">Top picks hari ini — langsung tonton ep baru</div>
+          </div>
+          <div style="padding:12px;border-radius:12px;background:var(--glass);display:flex;flex-direction:column;gap:8px">
+            <div style="font-weight:600">Rekomendasi untukmu</div>
+            <div style="color:var(--muted);font-size:13px">Berdasarkan histori tonton (lokal)</div>
+            <div class="row" style="margin-top:8px">
+              <div class="tag">Romance</div>
+              <div class="tag">Slice of Life</div>
+              <div class="tag">Korean</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <main>
+      <div class="toolbar">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:0.6"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <input id="searchInput" placeholder="Cari judul, aktor, genre..." />
+        </div>
+        <div class="filters" id="countryFilters">
+          <div class="chip active" data-filter="all">All</div>
+          <div class="chip" data-filter="KR">Korea</div>
+          <div class="chip" data-filter="JP">Japan</div>
+          <div class="chip" data-filter="CN">China</div>
+          <div class="chip" data-filter="TW">Taiwan</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <select id="sort" class="btn">
+            <option value="popular">Terpopuler</option>
+            <option value="new">Terbaru</option>
+            <option value="rating">Rating</option>
+            <option value="alpha">A-Z</option>
+          </select>
+          <button id="loadMore" class="btn">Load more</button>
+        </div>
+      </div>
+
+      <section class="grid" id="grid"></section>
+      <div style="text-align:center;margin-top:14px"><button id="resetDemo" class="btn">Reset Demo Data</button></div>
+    </main>
+
+    <footer>
+      Built with ❤️ — Dramaflix demo • local-only features (no server)
+    </footer>
+  </div>
+
+    <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700">Detail Drama</div>
+        <div><button id="closeModal" class="btn">Close</button></div>
+        </div>
+      <div class="modal-grid">
+        <div>
+          <div class="player" id="playerWrap">
+            <video id="videoPlayer" width="100%" height="240" controls preload="metadata" style="border-radius:8px;background:black"></video>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap" id="episodeList"></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div id="modalTitle" style="font-size:18px;font-weight:700"></div>
+              <div id="modalMeta" style="color:var(--muted);margin-top:6px"></div>
+            </div>
+            <div style="text-align:right">
+              <button id="modalFav" class="fav" title="Favorite">❤</button>
+            </div>
+          </div>
+          <div id="modalDesc" style="margin-top:10px;color:var(--muted)"></div>
+          <div id="modalTags" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <div id="authModal" class="modal" aria-hidden="true">
+    <div class="modal-card" style="max-width:420px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="authTitle" style="font-weight:700">Login</div>
+        <div><button id="closeAuth" class="btn">Close</button></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-direction:column">
+        <input id="authEmail" type="email" placeholder="Email (e.g. user@demo.com)" class="btn" style="width:100%" />
+        <input id="authPass" type="password" placeholder="Password (apapun)" class="btn" style="width:100%" />
+        <div style="display:flex;gap:8px;justify-content:space-between">
+          <button id="doLogin" class="btn primary">Login</button>
+          <button id="openRegister" class="btn">Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+    <div id="editProfileModal" class="modal" aria-hidden="true">
+    <div class="modal-card" style="max-width:420px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700">Edit Profile</div>
+        <div><button id="closeEditProfile" class="btn">Close</button></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-direction:column">
+        <input id="editBio" placeholder="Bio Singkat" class="btn" style="width:100%" />
+        <div class="file-input-wrap btn" style="width:100%; text-align: left;">
+          <span id="photoFileName">Pilih Foto Profil (Demo Edit Gambar)</span>
+          <input id="editPhotoFile" type="file" accept="image/*" />
+        </div>
+        <button id="doUpdateProfile" class="btn primary">Update Profile</button>
+      </div>
+    </div>
+  </div>
+
+
+    <div id="profilePanel" style="position:fixed;right:12px;top:80px;width:320px;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:60; border: 1px solid var(--glass-2)">
+    <div style="font-weight:700;margin-bottom:10px">Akun Saya</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div id="profilePhoto" style="width:64px;height:64px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center; background-size:cover; background-position:center;">👤</div>
+      <div>
+        <div id="profileEmail" style="font-weight:700"></div>
+        <div id="profileBio" style="color:var(--muted);font-size:13px"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button id="editProfile" class="btn">Edit Profile</button>
+      <button id="logout" class="btn primary">Logout</button>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:13px;color:var(--muted)">Histori Tontonan</div>
+      <div id="profileContinue" style="margin-top:6px;color:var(--muted);font-size:14px"></div>
+    </div>
+  </div>
+
+    <div id="adminPanel" style="position:fixed;left:12px;top:80px;bottom:12px;width:min(420px, 90%);background:var(--card);padding:12px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:60;overflow:auto; border: 1px solid var(--glass-2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:700">Admin — Manage Dramaflix</div>
+      <div><button id="closeAdmin" class="btn">Close</button></div>
+    </div>
+
+    <hr style="border-color:var(--glass-2); margin-top:12px; margin-bottom:12px" />
+
+    <div style="font-weight:700; margin-bottom:8px">Add New Drama (Demo Upload Video/Gambar)</div>
+    <div style="display:flex;gap:8px;flex-direction:column">
+      <input id="admTitle" placeholder="Title" class="btn" style="width:100%" />
+      <input id="admCountry" placeholder="Country code (KR/JP/etc.)" class="btn" />
+      <input id="admYear" type="number" placeholder="Year (e.g. 2024)" class="btn" />
+      <input id="admGenres" placeholder="Genres (comma separated)" class="btn" />
+      
+      <div class="file-input-wrap btn" style="width:100%; text-align: left;">
+        <span id="posterFileName">Pilih File Poster (Gambar)</span>
+        <input id="admPosterFile" type="file" accept="image/*" />
+      </div>
+      
+      <div class="file-input-wrap btn" style="width:100%; text-align: left;">
+        <span id="trailerFileName">Pilih File Trailer (Video)</span>
+        <input id="admTrailerFile" type="file" accept="video/*" />
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button id="admAdd" class="btn primary" style="flex:1">Add Drama</button>
+      </div>
+    </div>
+
+    <hr style="border-color:var(--glass-2); margin-top:12px; margin-bottom:12px" />
+
+    <div style="font-weight:700">Dashboard Statistik</div>
+    <pre id="adminStats" style="background:transparent;color:var(--muted);font-size:13px;margin-top:8px"></pre>
+  </div>
+
+  <script>
+    // --- Dummy dataset (10 items) ---
+    const DRAMAS = [
+      {id:1,title:'Spring of You',country:'KR',year:2021,genre:['Romance','Drama'],rating:8.9,desc:'Seorang mahasiswa bertemu takdirnya di kota baru.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ff7a95"/><stop offset="1" stop-color="#af5bff"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" font-family="Arial" fill="white">Spring of You</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:2,title:'Moonlight Cafe',country:'JP',year:2019,genre:['Slice of Life','Romance'],rating:8.1,desc:'Kisah para pekerja kafe yang punya cerita tersendiri.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#2b6cb0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="white">Moonlight Cafe</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:3,title:'City of Lights',country:'CN',year:2022,genre:['Drama','Crime'],rating:8.6,desc:'Detektif muda mengungkap misteri di kota metropolitan.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#0f1724"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#ffd166">City of Lights</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:4,title:'Tea & Melody',country:'TW',year:2020,genre:['Romance','Music'],rating:8.2,desc:'Musisi dan barista menjalin hubungan lewat lagu.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#6a11cb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="white">Tea & Melody</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:5,title:'After Rain',country:'KR',year:2018,genre:['Drama'],rating:7.9,desc:'Sebuah keluarga kecil menghadapi perubahan besar.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#034f84"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="white">After Rain</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:6,title:'Neon Romance',country:'JP',year:2023,genre:['Romance','Drama'],rating:8.7,desc:'Cinta modern di bawah lampu neon Tokyo.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#ff6b6b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="white">Neon Romance</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:7,title:'Midnight Runner',country:'KR',year:2024,genre:['Action','Thriller'],rating:8.3,desc:'Pelari malam yang ternyata pelarian dari masa lalu.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#1b262c"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#00ffd5">Midnight Runner</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:8,title:'Paper Stars',country:'JP',year:2017,genre:['Drama','School'],rating:7.8,desc:'Persahabatan dan cita-cita di sekolah menengah.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#8ecae6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#023047">Paper Stars</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:9,title:'Hidden Harbor',country:'CN',year:2021,genre:['Mystery','Drama'],rating:8.0,desc:'Kota pelabuhan menyimpan rahasia kelam.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#023e8a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#ffd166">Hidden Harbor</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+      {id:10,title:'Cafe at Dawn',country:'KR',year:2016,genre:['Slice of Life','Romance'],rating:7.6,desc:'Kisah barista dan pelanggan yang mengubah hidup.',poster:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360"><rect width="100%" height="100%" fill="#ffb703"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#023047">Cafe at Dawn</text></svg>`), trailer:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'}
+    ];
+    
+    // --- Persistensi Data ---
+    const usersDB = JSON.parse(localStorage.getItem('usersDB')||'{}');
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')||'null');
+    let adminDB = JSON.parse(localStorage.getItem('adminDB')||'[]');
+    let lastDramaId = DRAMAS.length + (adminDB.length > 0 ? Math.max(...adminDB.map(d => d.id)) : 0);
+    
+    // Menggabungkan data demo dan data admin
+    let ALL_DRAMAS = [...DRAMAS, ...adminDB];
+
+    // --- App state ---
+    let state = {items: ALL_DRAMAS, viewCount:6, filter:'all', query:'', sort:'popular', lastWatched:null};
+
+    // init from localStorage
+    let savedFav = [];
+    if(currentUser && usersDB[currentUser.email]){
+      savedFav = usersDB[currentUser.email].favorites || [];
+      state.lastWatched = usersDB[currentUser.email].continueWatching || null;
+    } else {
+      // fallback for guest mode (old local storage)
+      savedFav = JSON.parse(localStorage.getItem('df_fav')||'[]');
+      state.lastWatched = JSON.parse(localStorage.getItem('df_last')||'null');
+    }
+    state.favorites = new Set(savedFav);
+
+    // DOM refs
+    const slidesEl = document.getElementById('slides');
+    const grid = document.getElementById('grid');
+    const searchInput = document.getElementById('searchInput');
+    const favCount = document.getElementById('favCount');
+    const modal = document.getElementById('modal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const continueBadge = document.getElementById('continueBadge');
+    const authBtn = document.getElementById('authBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    const adminPanel = document.getElementById('adminPanel');
+
+    // --- Helper Functions ---
+    
+    function updateAuthUI(){
+      if(currentUser){
+        authBtn.innerText = usersDB[currentUser.email].profile.photo ? 'Profile' : currentUser.email;
+        authBtn.classList.remove('primary');
+      } else {
+        authBtn.innerText = 'Login';
+        authBtn.classList.add('primary');
+        profilePanel.style.display = 'none';
+      }
+      updateContinueBadge();
+      renderGrid(); // update fav icons
+    }
+
+    function updateProfilePanel(){
+      if(!currentUser) return;
+      const user = usersDB[currentUser.email];
+      document.getElementById('profileEmail').innerText = currentUser.email;
+      document.getElementById('profileBio').innerText = user.profile.bio || 'Bio belum diatur';
+      
+      const photoEl = document.getElementById('profilePhoto');
+      if(user.profile.photo){
+        photoEl.style.backgroundImage = `url('${user.profile.photo}')`;
+        photoEl.innerText = '';
+      } else {
+        photoEl.style.backgroundImage = 'none';
+        photoEl.innerText = '👤';
+      }
+
+      const cont = user.continueWatching;
+      if(cont){
+        document.getElementById('profileContinue').innerText = `${ALL_DRAMAS.find(d => d.id === cont.id)?.title || cont.id} (Ep ${cont.episode})`;
+      } else {
+        document.getElementById('profileContinue').innerText = 'Tidak ada tontonan terakhir';
+      }
+    }
+
+    // --- Auth Logic ---
+    function saveUsersDB(){ localStorage.setItem('usersDB', JSON.stringify(usersDB)); }
+    function saveCurrentUser(){ localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
+    function saveAdminDB(){ localStorage.setItem('adminDB', JSON.stringify(adminDB)); ALL_DRAMAS = [...DRAMAS, ...adminDB]; renderHero(); renderGrid(); }
+
+    function registerUser(email, password){
+      if(usersDB[email]) return alert('Email sudah terdaftar. Silakan login.');
+      usersDB[email] = {password, favorites:[], profile:{photo:'', bio:''}, continueWatching:null};
+      saveUsersDB();
+      alert('Registrasi berhasil. Silakan login.');
+      showAuthModal('login');
+    }
+
+    function loginUser(email, password){
+      if(!usersDB[email] || usersDB[email].password!==password) return alert('Login gagal. Cek email dan password.');
+      currentUser = {email};
+      saveCurrentUser();
+      updateFavoritesFromUser();
+      updateAuthUI();
+      closeModal(document.getElementById('authModal'));
+      alert(`Selamat datang, ${email}!`);
+      updateProfilePanel();
+    }
+
+    function logoutUser(){ 
+      currentUser=null; 
+      localStorage.removeItem('currentUser'); 
+      state.favorites = new Set(JSON.parse(localStorage.getItem('df_fav')||'[]')); // fallback to guest fav
+      updateAuthUI(); 
+      alert('Logout berhasil.');
+    }
+
+    function updateFavoritesFromUser(){
+      if(currentUser){
+        state.favorites = new Set(usersDB[currentUser.email].favorites || []);
+      } else {
+        state.favorites = new Set(JSON.parse(localStorage.getItem('df_fav')||'[]'));
+      }
+      renderGrid();
+    }
+
+    function toggleFavorite(id){ 
+      if(currentUser){
+        const u = usersDB[currentUser.email];
+        const i = u.favorites.indexOf(id);
+        if(i===-1) u.favorites.push(id); else u.favorites.splice(i,1);
+        state.favorites = new Set(u.favorites);
+        saveUsersDB();
+      } else {
+        // Guest/local fallback
+        if(state.favorites.has(id)) state.favorites.delete(id); else state.favorites.add(id);
+        localStorage.setItem('df_fav', JSON.stringify([...state.favorites]));
+      }
+      renderGrid();
+    }
+
+    function saveProgress(id, episode){
+      const progress = {id, episode, time: new Date().toISOString()};
+      if(currentUser){
+        usersDB[currentUser.email].continueWatching = progress;
+        saveUsersDB();
+      } else {
+        // Guest/local fallback
+        localStorage.setItem('df_last', JSON.stringify(progress));
+      }
+      state.lastWatched = progress;
+      updateContinueBadge();
+      updateProfilePanel();
+    }
+
+
+    // --- Rendering Functions ---
+
+    function renderHero(){
+      slidesEl.innerHTML = '';
+      const top = [...ALL_DRAMAS].sort((a,b)=>b.rating-a.rating).slice(0,3);
+      top.forEach(item=>{
+        const s = document.createElement('div'); s.className='slide';
+        s.innerHTML = `
+          <div class="poster" style="background-image:url('${item.poster}')"></div>
+          <div>
+            <div style="font-weight:700;font-size:20px">${item.title}</div>
+            <div style="margin-top:6px;color:var(--muted)">${item.genre.join(' • ')} — ${item.year}</div>
+            <div style="margin-top:10px;color:var(--muted);max-width:520px">${item.desc}</div>
+          </div>
+        `;
+        s.onclick = ()=>openModal(item.id);
+        slidesEl.appendChild(s);
+      });
+    }
+
+    // simple slider autoplay
+    let slideIndex=0;
+    function startSlider(){
+      setInterval(()=>{
+        slideIndex=(slideIndex+1)%Math.max(1,slidesEl.children.length);
+        slidesEl.style.transform = `translateX(-${slideIndex*100}%)`;
+      },3800);
+    }
+
+    function getFilteredSorted(){
+      let items = [...ALL_DRAMAS];
+      if(state.filter && state.filter!=='all') items = items.filter(i=>i.country===state.filter);
+      if(state.query) items = items.filter(i=> (i.title+ ' '+ i.desc + ' ' + i.genre.join(' ')).toLowerCase().includes(state.query.toLowerCase()));
+      
+      // Sorting logic
+      if(state.sort==='alpha') items.sort((a,b)=>a.title.localeCompare(b.title));
+      if(state.sort==='rating') items.sort((a,b)=>b.rating-a.rating);
+      if(state.sort==='new') items.sort((a,b)=>b.year-a.year); 
+      if(state.sort==='popular') items.sort((a,b)=>b.rating - a.rating);
+      return items;
+    }
+    
+    function renderGrid(){
+      grid.innerHTML='';
+      const items = getFilteredSorted();
+      favCount.textContent = state.favorites.size;
+      const slice = items.slice(0,state.viewCount);
+      slice.forEach(it=>{
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <div class="art" style="background-image:url('${it.poster}')"></div>
+          <div class="info">
+            <div class="title">${it.title}</div>
+            <div class="sub">${it.genre.join(', ')} • ${it.year} • ⭐ ${it.rating}</div>
+          </div>
+        `;
+        const fav = document.createElement('button'); fav.className='fav'; fav.innerText='❤';
+        fav.onclick = (e)=>{ e.stopPropagation(); toggleFavorite(it.id); };
+        if(state.favorites.has(it.id)) fav.style.opacity=1; else fav.style.opacity=0.3;
+        card.appendChild(fav);
+        card.onclick = ()=>openModal(it.id);
+        grid.appendChild(card);
+      });
+    }
+
+    function updateContinueBadge(){
+      let last = state.lastWatched;
+      if(currentUser) last = usersDB[currentUser.email]?.continueWatching;
+
+      if(last){ 
+        const item = ALL_DRAMAS.find(d => d.id === last.id);
+        continueBadge.style.display='inline-block'; 
+        continueBadge.innerText = `Continue: ${item?.title || last.id} (ep ${last.episode || 1})`; 
+      }
+      else continueBadge.style.display='none';
+    }
+
+    // --- Modal Logic ---
+
+    function openModal(id, autoplay=false){
+      const item = ALL_DRAMAS.find(x=>x.id===id); if(!item) return;
+      modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+      document.getElementById('modalTitle').innerText = item.title;
+      document.getElementById('modalMeta').innerText = `${item.genre.join(' • ')} • ${item.year} • ⭐ ${item.rating}`;
+      document.getElementById('modalDesc').innerText = item.desc;
+      
+      document.getElementById('modalTags').innerHTML = '';
+      item.genre.forEach(g=>{ const t=document.createElement('div'); t.className='tag'; t.innerText=g; document.getElementById('modalTags').appendChild(t); });
+      
+      const modalFav = document.getElementById('modalFav');
+      modalFav.onclick = ()=>{ toggleFavorite(item.id); };
+      modalFav.style.opacity = state.favorites.has(item.id) ? 1 : 0.3;
+
+      // episodes (demo)
+      document.getElementById('episodeList').innerHTML='';
+      for(let i=1;i<=6;i++){
+        const b = document.createElement('button'); b.className='btn'; b.style.padding='6px 8px'; b.innerText='Ep '+i; b.onclick = ()=>{ playEpisode(item, i); };
+        document.getElementById('episodeList').appendChild(b);
+      }
+
+      // load trailer into player
+      videoPlayer.src = item.trailer;
+      if(autoplay){ videoPlayer.play().catch(()=>{}); }
+
+      // mark last watched (if already logged in, this updates user DB, otherwise updates local)
+      saveProgress(item.id, 1);
+    }
+
+    function closeModal(el=modal){ 
+      el.classList.remove('open'); el.setAttribute('aria-hidden','true'); 
+      if(el===modal) videoPlayer.pause(); 
+    }
+    
+    function playEpisode(item, ep){
+      // Tambahkan hash ke video agar tampak seperti episode berbeda
+      videoPlayer.src = item.trailer + '#t=' + (ep*10); 
+      videoPlayer.play().catch(()=>{});
+      saveProgress(item.id, ep);
+    }
+    
+    function showAuthModal(mode='login'){
+      const modalEl = document.getElementById('authModal');
+      document.getElementById('authTitle').innerText = mode==='login' ? 'Login' : 'Register';
+      document.getElementById('doLogin').innerText = mode==='login' ? 'Login' : 'Register';
+      document.getElementById('openRegister').style.display = mode==='login' ? 'inline-block' : 'none'; // simple toggle for demo
+      
+      modalEl.classList.add('open');
+    }
+    
+    function showEditProfileModal(){
+      if(!currentUser) return;
+      const user = usersDB[currentUser.email];
+      document.getElementById('editBio').value = user.profile.bio || '';
+      document.getElementById('photoFileName').innerText = 'Pilih Foto Profil (Demo Edit Gambar)';
+      document.getElementById('editPhotoFile').value = ''; // Reset file input
+      document.getElementById('editProfileModal').classList.add('open');
+    }
+
+    function showAdminPanel(){
+      updateAdminStats();
+      adminPanel.style.display = 'block';
+    }
+    
+    function hideAdminPanel(){
+      adminPanel.style.display = 'none';
+    }
+
+    function updateAdminStats(){
+      const stats = { 
+        totalUsers: Object.keys(usersDB).length, 
+        totalDrama: ALL_DRAMAS.length, 
+        totalCustomDrama: adminDB.length
+      };
+      document.getElementById('adminStats').innerText = JSON.stringify(stats, null, 2);
+    }
+
+    // --- Event Listeners ---
+
+    // Header Controls
+    document.getElementById('addHeroFav').onclick = ()=>{
+      const id = ALL_DRAMAS.sort((a,b)=>b.rating-a.rating)[0].id; 
+      toggleFavorite(id);
+      alert('Added to favorites (local/user)');
+    }
+
+    document.getElementById('playHero').onclick = ()=>{
+      openModal(ALL_DRAMAS.sort((a,b)=>b.rating-a.rating)[0].id,true);
+    }
+
+    // Search + Filters
+    searchInput.addEventListener('input',e=>{ state.query = e.target.value; renderGrid(); });
+    document.querySelectorAll('#countryFilters .chip').forEach(ch=>{
+      ch.addEventListener('click',()=>{
+        document.querySelectorAll('#countryFilters .chip').forEach(c=>c.classList.remove('active'));
+        ch.classList.add('active'); 
+        state.filter = ch.getAttribute('data-filter'); 
+        renderGrid();
+      });
+    });
+    document.getElementById('sort').addEventListener('change',e=>{ state.sort = e.target.value; renderGrid(); });
+    document.getElementById('loadMore').addEventListener('click',()=>{ state.viewCount+=6; renderGrid(); });
+    document.getElementById('resetDemo').addEventListener('click',()=>{ 
+      if(confirm('Yakin ingin mereset semua data demo (user, admin, fav) dari local storage?')){
+        localStorage.clear(); 
+        window.location.reload(); 
+      }
+    });
+
+    // Modal Detail
+    document.getElementById('closeModal').addEventListener('click',()=>closeModal());
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    
+    // Continue Badge
+    continueBadge.addEventListener('click',()=>{
+      let last = state.lastWatched;
+      if(currentUser) last = usersDB[currentUser.email]?.continueWatching;
+      if(!last) return; openModal(last.id, true);
+    });
+    
+    // --- Auth and Profile Logic Integration ---
+    
+    authBtn.addEventListener('click', ()=>{
+      if(currentUser){
+        profilePanel.style.display = profilePanel.style.display === 'block' ? 'none' : 'block';
+        updateProfilePanel();
+      } else {
+        showAuthModal('login');
+      }
+    });
+    
+    document.getElementById('closeAuth').addEventListener('click', ()=>closeModal(document.getElementById('authModal')));
+    document.getElementById('openRegister').addEventListener('click', ()=>showAuthModal('register'));
+    document.getElementById('doLogin').addEventListener('click', ()=>{
+      const email = document.getElementById('authEmail').value;
+      const pass = document.getElementById('authPass').value;
+      if(document.getElementById('authTitle').innerText === 'Login') {
+        loginUser(email, pass);
+      } else {
+        registerUser(email, pass);
+      }
+    });
+
+    // Profile Panel buttons
+    document.getElementById('logout').addEventListener('click', logoutUser);
+    document.getElementById('editProfile').addEventListener('click', showEditProfileModal);
+    document.getElementById('closeEditProfile').addEventListener('click', ()=>closeModal(document.getElementById('editProfileModal')));
+    
+    // Edit Profile Logic (termasuk fitur edit gambar sederhana)
+    document.getElementById('editPhotoFile').addEventListener('change', (e) => {
+      document.getElementById('photoFileName').innerText = e.target.files[0] ? e.target.files[0].name : 'Pilih Foto Profil (Demo Edit Gambar)';
+    });
+    
+    document.getElementById('doUpdateProfile').addEventListener('click', () => {
+      if(!currentUser) return;
+      const newBio = document.getElementById('editBio').value;
+      const photoFile = document.getElementById('editPhotoFile').files[0];
+      
+      let newPhoto = usersDB[currentUser.email].profile.photo;
+      
+      if (photoFile) {
+        // Simulasi 'Edit Gambar': Membaca file dan menyimpannya sebagai Data URL
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          newPhoto = event.target.result;
+          usersDB[currentUser.email].profile.bio = newBio;
+          usersDB[currentUser.email].profile.photo = newPhoto;
+          saveUsersDB();
+          updateProfilePanel();
+          updateAuthUI();
+          closeModal(document.getElementById('editProfileModal'));
+          alert('Profil berhasil diperbarui (Foto disimpan lokal).');
+        };
+        reader.readAsDataURL(photoFile);
+      } else {
+        // Hanya update bio
+        usersDB[currentUser.email].profile.bio = newBio;
+        saveUsersDB();
+        updateProfilePanel();
+        closeModal(document.getElementById('editProfileModal'));
+        alert('Profil berhasil diperbarui.');
+      }
+    });
+
+    // --- Admin Panel Logic ---
+    
+    document.getElementById('adminToggle').addEventListener('click', showAdminPanel);
+    document.getElementById('closeAdmin').addEventListener('click', hideAdminPanel);
+    
+    document.getElementById('admPosterFile').addEventListener('change', (e) => {
+      document.getElementById('posterFileName').innerText = e.target.files[0] ? e.target.files[0].name : 'Pilih File Poster (Gambar)';
+    });
+    
+    document.getElementById('admTrailerFile').addEventListener('change', (e) => {
+      document.getElementById('trailerFileName').innerText = e.target.files[0] ? e.target.files[0].name : 'Pilih File Trailer (Video)';
+    });
+
+    document.getElementById('admAdd').addEventListener('click', () => {
+      const title = document.getElementById('admTitle').value;
+      const country = document.getElementById('admCountry').value;
+      const year = parseInt(document.getElementById('admYear').value);
+      const genres = document.getElementById('admGenres').value.split(',').map(g => g.trim()).filter(g => g.length > 0);
+      const posterFile = document.getElementById('admPosterFile').files[0];
+      const trailerFile = document.getElementById('admTrailerFile').files[0];
+      
+      if (!title || !country || isNaN(year) || genres.length === 0 || !posterFile || !trailerFile) {
+        return alert('Semua kolom (termasuk file) harus diisi!');
+      }
+      
+      const readerPoster = new FileReader();
+      const readerTrailer = new FileReader();
+      
+      let posterDataUrl;
+      let trailerDataUrl;
+
+      // Memastikan kedua file sudah terbaca sebelum menambahkan drama
+      const checkComplete = () => {
+        if(posterDataUrl && trailerDataUrl){
+          const newDrama = {
+            id: ++lastDramaId,
+            title,
+            country,
+            year,
+            genre: genres,
+            rating: (Math.random() * 2 + 7).toFixed(1), // Rating acak 7.0 - 9.0
+            desc: 'Drama baru yang diunggah oleh admin (Konten lokal)',
+            poster: posterDataUrl,
+            trailer: trailerDataUrl
+          };
+          adminDB.push(newDrama);
+          saveAdminDB();
+          alert(`Drama "${title}" berhasil ditambahkan ke grid! (Tersimpan lokal)`);
+          updateAdminStats();
+          
+          // Reset form
+          document.getElementById('admTitle').value = '';
+          document.getElementById('admCountry').value = '';
+          document.getElementById('admYear').value = '';
+          document.getElementById('admGenres').value = '';
+          document.getElementById('admPosterFile').value = '';
+          document.getElementById('admTrailerFile').value = '';
+          document.getElementById('posterFileName').innerText = 'Pilih File Poster (Gambar)';
+          document.getElementById('trailerFileName').innerText = 'Pilih File Trailer (Video)';
+        }
+      }
+
+      readerPoster.onload = (e) => { posterDataUrl = e.target.result; checkComplete(); };
+      readerTrailer.onload = (e) => { trailerDataUrl = e.target.result; checkComplete(); };
+      
+      // Membaca file sebagai Data URL
+      readerPoster.readAsDataURL(posterFile);
+      readerTrailer.readAsDataURL(trailerFile);
+    });
+    
+    // init
+    renderHero(); startSlider(); renderGrid(); updateAuthUI();
+
+  </script>
+
+</body>
+</html>
